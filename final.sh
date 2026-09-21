@@ -90,6 +90,12 @@ Options:
   -a         Shows all files and directories with full details
   -p         Shows files permision
   -h         Display this help and exit
+
+comined flag:
+
+  -af or -fa  Shows just file and their all information
+  -da or -ad  Shows just file and thier all information
+
 Examples:
   ./final.sh -f /var/log
   ./final.sh -a
@@ -115,7 +121,7 @@ folder_flag() {
 	do
 		[ -e "$n" ] || continue
 		if [ -d "$n" ]; then
-			echo -e "${yellow}$n${nc}"
+			echo -e "${green}$n${nc}"
 		fi
 	done
 }
@@ -181,9 +187,6 @@ dir_all_flag()
 
 		get_permission "$n"
 
-		if [ -f "$n" ];then
-			continue
-		fi
 		if [ -d "$n" ];then
 			echo -e "| permission: $read_perm $write_perm $execute_perm | ${green}$n${nc}"
 		fi
