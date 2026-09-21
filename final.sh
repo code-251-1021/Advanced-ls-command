@@ -52,6 +52,7 @@ fi
 
 yellow='\033[33m'
 green='\033[32m'
+ch='\033[1;31m'
 nc='\033[0m'
 
 # helper function for checking permissions
@@ -111,7 +112,7 @@ file_flag() {
 	do
 		[ -e "$n" ] || continue
 		if [ -f "$n" ]; then
-			echo -e "${yellow}$n${nc}"
+			printf "${yellow}%s${nc}\n" "$n"
 		fi
 	done
 }
@@ -121,24 +122,26 @@ folder_flag() {
 	do
 		[ -e "$n" ] || continue
 		if [ -d "$n" ]; then
-			echo -e "${green}$n${nc}"
+			printf "${green}%s${nc}\n" "$n"
 		fi
 	done
 }
-
+i
 all_info_flag() {
 	for n in *
 	do
 		[ -e "$n" ] || continue
 
 		get_permission "$n"
+		birth_date=$(stat -c "%w" "$n" 2>/dev/null | awk '{print $1}')
+		[ "$birth_date" = "-" ] || [ -z "$birth_date" ] && birth_date=$(stat -c "%y" "$n" 2>/dev/null | awk '{print $1}')
 
 		if [ -f "$n" ]; then
-			size=$(wc -c < "$n")
-			lines=$(wc -l < "$n")
-			echo -e "| permission: $read_perm $write_perm $execute_perm | size: $size bytes lines : $lines, ${yellow}$n${nc}"
+			size=$(ls -lh -- "$n" 2>/dev/null | awk '{print $5}')
+			size_txt="size:$size"
+			printf "| permission: %s %s %s | %-10s | %-10s | ${yellow}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$birth_date" "$size_txt" "$n"
 		else
-			echo -e "| permission: $read_perm $write_perm $execute_perm | ${green}$n${nc}"
+			printf "| permission: %s %s %s | %-10s | %-10s | ${green}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$birth_date" "" "$n"
 		fi
 	done
 }
@@ -152,9 +155,9 @@ permision_only()
 		get_permission "$n"
 
 		if [ -f "$n" ]; then
-			echo -e "| permision : $read_perm $write_perm $execute_perm | ${yellow}$n${nc}"
+			printf "| permision : %s %s %s | ${yellow}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$n"
 		elif [ -d "$n" ]; then
-			echo -e "| permision : $read_perm $write_perm $execute_perm | ${green}$n${nc}"
+			printf "| permision : %s %s %s | ${green}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$n"
 		fi
 	done
 	return 0
@@ -172,9 +175,9 @@ file_all_flag()
 		get_permission "$n"
 
 		if [ -f "$n" ]; then
-			size=$(wc -c < "$n")
-			lines=$(wc -l < "$n")
-			echo -e "| permission: $read_perm $write_perm $execute_perm | size: $size bytes lines : $lines, ${yellow}$n${nc}"
+			size=$(ls -lh -- "$n" 2>/dev/null | awk '{print $5}')
+			size_txt="size:$size "
+			printf "| permission: %s %s %s | %-10s | ${yellow}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$size_txt" "$n"
 		fi
 	done
 }
@@ -187,8 +190,29 @@ dir_all_flag()
 
 		get_permission "$n"
 
-		if [ -d "$n" ];then
-			echo -e "| permission: $read_perm $write_perm $execute_perm | ${green}$n${nc}"
+		if [ -d "$n" ]; then
+			printf "| permission: %s %s %s | ${green}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$n"
+		fi
+	done
+}
+
+hidden()
+{
+	for n in .*
+	do
+		[ -e "$n" ] || continue
+		[ "$n" = "." ] || [ "$n" = ".." ] && continue
+
+		get_permission "$n"
+		birth_date=$(stat -c "%w" "$n" 2>/dev/null | awk '{print $1}')
+		[ "$birth_date" = "-" ] || [ -z "$birth_date" ] && birth_date=$(stat -c "%y" "$n" 2>/dev/null | awk '{print $1}')
+
+		if [ -f "$n" ]; then
+			size=$(ls -lh -- "$n" 2>/dev/null | awk '{print $5}')
+			size_txt="size:$size"
+			printf "| permission: %s %s %s | %-10s | %-10s | ${ch}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$birth_date" "$size_txt" "$n"
+		else
+			printf "| permission: %s %s %s | %-10s | %-10s | ${ch}%s${nc}\n" "$read_perm" "$write_perm" "$execute_perm" "$birth_date" "" "$n"
 		fi
 	done
 }
@@ -204,6 +228,7 @@ does()
 			;;
 		"-a") 
 			all_info_flag
+			hidden
 			;;
 		"-h") 
 			help_flag
@@ -218,7 +243,8 @@ does()
 			dir_all_flag
 			;;
 		*)    
-			espeak "Eror: Invalid flag type -h for help"
+			espeak "Error: Invalid flag type -h for help"
+			exit 1
 			;;
 	esac
 }
@@ -226,7 +252,7 @@ does()
 if [ -z "$1" ]; then
 	does
 elif [ ! -d "$1" ]; then
-	espeak "Error: Directory  does not exist!"
+	espeak "Error: Directory does not exist!"
 	exit 1
 else
 	cd "$1"
