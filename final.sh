@@ -21,7 +21,7 @@ os_release()
 
 download_install_tools() 
 {
-	tools=("espeak")
+	tools=("tree")
 	for n in "${tools[@]}"
 	do
 		if command -v "$n" >/dev/null 2>&1; then
@@ -243,7 +243,7 @@ does()
 			dir_all_flag
 			;;
 		*)    
-			espeak "Error: Invalid flag type -h for help"
+			echo  "Error: Invalid flag type -h for help"
 			exit 1
 			;;
 	esac
@@ -252,7 +252,7 @@ does()
 if [ -z "$1" ]; then
 	does
 elif [ ! -d "$1" ]; then
-	espeak "Error: Directory does not exist!"
+	echo "Error: Directory does not exist!"
 	exit 1
 else
 	cd "$1"
