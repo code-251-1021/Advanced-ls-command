@@ -126,7 +126,6 @@ folder_flag() {
 		fi
 	done
 }
-i
 all_info_flag() {
 	for n in *
 	do
